@@ -1,4 +1,5 @@
 from random import randint
+import time
 
 
 class BoardException(Exception):
@@ -141,7 +142,7 @@ class Board:
                     self.downed_ships_count += 1
                     self.contour(ship, verb=True)
                     print("Корабль убит!")
-                    return False
+                    return True
                 else:
                     print("Корабль ранен!")
                     return True
@@ -200,9 +201,12 @@ class Gamer(Player):
 
             return Dot(x-1, y-1)
 
+
 class Game:
     def __init__(self, size=6):
         self.size = size
+        self.boards_horizont = True  # расположение досок на экране (True - горизонтальное, в строку)
+        self.with_pause = True  # делать паузу во время хода компьютера
         pl = self.random_board()
         comp = self.random_board()
         comp.hid = True
@@ -243,13 +247,32 @@ class Game:
         print(" y - номер столбца ")
 
     def print_board(self):
-        print("-" * 20)
-        print("Доска пользователя:")
-        print(self.us.board)
-        print("-" * 20)
-        print("Доска компьютера:")
-        print(self.ai.board)
-        print("-" * 20)
+        if self.boards_horizont:
+            print("-" * 27, " "*8, "-" * 27)
+            print("Доска пользователя:", " "*10, " "*10,"Доска компьютера:")
+            print(self.print_two_boards(self.us.board, self.ai.board))
+            print("-" * 64)
+        else:
+            print("-" * 20)
+            print("Доска пользователя:")
+            print(self.us.board)
+            print("-" * 20)
+            print("Доска компьютера:")
+            print(self.ai.board)
+            print("-" * 20)
+
+    def print_two_boards(self, board_1, board_2):
+        ret_val = "  | 1 | 2 | 3 | 4 | 5 | 6 |" + " " * 10 + "  | 1 | 2 | 3 | 4 | 5 | 6 |"
+        ret_str1 = ret_str2 = ""
+        for i in range(6):
+            ret_str1 = f"{i + 1} | " + " | ".join(board_1.field[i]) + " |"
+            if board_1.hid:
+                ret_str1 = ret_str1.replace("■", "0")
+            ret_str2 = f"{i + 1} | " + " | ".join(board_2.field[i]) + " |"
+            if board_2.hid:
+                ret_str2 = ret_str2.replace("■", "0")
+            ret_val += "\n" + ret_str1 + " "*10 + ret_str2
+        return ret_val
 
     def loop(self):
         num = 0
@@ -260,6 +283,8 @@ class Game:
                 repeat = self.us.move()
             else:
                 print("Ходит компьютер!")
+                if self.with_pause:
+                    time.sleep(3)
                 repeat = self.ai.move()
             if repeat:
                 num -= 1
@@ -284,60 +309,5 @@ class Game:
 
 
 
-###########
-
-
 g = Game()
 g.start()
-
-# g = Game()
-# g.size = 6
-# print(g.random_board())
-
-
-#
-# ta = Dot(2, 3)
-# tb = Dot(2, 3)
-# tb.status = 1
-# print(ta == tb)
-#
-# sh = Ship(ta, 4, 1)
-# # print(sh.get_dots())
-# # shdts = sh.get_dots()
-# print(sh.dots)
-# shdts = sh.dots
-# for sh_d in shdts:
-#     print(sh_d.x, sh_d.y, sh_d.status)
-#
-# print(tb in shdts)
-# print(sh.dot_is_in_ship(tb))
-#
-# b = Board()
-# # b.contour(sh)
-# # b.contour(Ship(Dot(1, 2), 4, 0))
-# b.add_ship(Ship(Dot(1, 2), 4, 0))
-# b.add_ship(Ship(Dot(0, 0), 2, 0))
-#
-# print(b)
-# print(b.busy_cells)
-
-# a = input("Input positive integer: ")
-# a=12
-#
-# try:
-#     a = int(a)
-#     if a < 0:
-#         #raise BoardOutException("You give negative!")
-#         raise BoardOutException("111")
-# except ValueError:
-#     print("Error type of value!")
-# except BoardOutException as mr:
-#     print("ERROR",mr)
-# else:
-#     print(a)
-
-# l1 = [(1,1), (1,3), (3,2)]
-# print((1,3) in l1)
-
-# for i in range (len(l1)):
-#     print(i)
