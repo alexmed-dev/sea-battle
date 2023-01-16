@@ -161,16 +161,15 @@ class Player:
     def __init__(self, board, enemy):
         self.board = board
         self.enemy = enemy
-        self.go_until_miss = False  # ходить до промаха
 
     def ask(self):
         raise NotImplementedError()
 
-    def move(self):
+    def move(self, go_until_miss=False):
         while True:
             try:
                 target = self.ask()
-                repeat = self.enemy.shot(target, self.go_until_miss)
+                repeat = self.enemy.shot(target, go_until_miss)
                 return repeat
             except BoardException as e:
                 print(e)
@@ -250,6 +249,10 @@ class Game:
         print(" формат ввода: x, y ")
         print(" x - номер строки ")
         print(" y - номер столбца ")
+        if self.go_until_miss:
+            print(" ход до первого промаха ")
+        else:
+            print(" переход хода - после промаха, или потопления корабля противника ")
 
     def print_board(self):
         if self.boards_horizont:
@@ -285,12 +288,12 @@ class Game:
             self.print_board()
             if num % 2 == 0:
                 print("Ходит пользователь!")
-                repeat = self.us.move()
+                repeat = self.us.move(self.go_until_miss)
             else:
                 print("Ходит компьютер!")
                 if self.with_pause:
                     time.sleep(3)
-                repeat = self.ai.move()
+                repeat = self.ai.move(self.go_until_miss)
             if repeat:
                 num -= 1
 
@@ -309,9 +312,6 @@ class Game:
             num += 1
 
     def start(self):
-        if self.go_until_miss:
-            self.ai.go_until_miss_activate()
-            self.us.go_until_miss_activate()
         self.greet()
         self.loop()
 
