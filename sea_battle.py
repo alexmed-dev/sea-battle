@@ -12,7 +12,7 @@ class BoardOutException(BoardException):
         if args:
             self.message = args[0]
         else:
-            self.message = "Board Out Exception"
+            self.message = "Вы пытаетесь выстрелить за доску!"
 
     def __str__(self):
         return self.message
@@ -23,7 +23,7 @@ class UsedPointException(BoardException):
         if args:
             self.message = args[0]
         else:
-            self.message = "Shoot Used Point Exception"
+            self.message = "Вы уже стреляли в эту клетку"
 
     def __str__(self):
         return self.message
@@ -126,7 +126,7 @@ class Board:
         self.ships.append(ship)  # добавляем корабль в список кораблей доски
         self.contour(ship)  # добавляем все точки контура в список занятых (без прорисовки на доске)
 
-    def shot(self, dot):  # стреляем в точку
+    def shot(self, dot, until_miss=False):  # стреляем в точку
         if self.out(dot):
             raise BoardOutException()
         if dot in self.busy_cells:
@@ -142,7 +142,7 @@ class Board:
                     self.downed_ships_count += 1
                     self.contour(ship, verb=True)
                     print("Корабль убит!")
-                    return True
+                    return until_miss  # если передали until_miss=True, игрок продолжает стрелять/ иначе - переход хода
                 else:
                     print("Корабль ранен!")
                     return True
@@ -161,6 +161,7 @@ class Player:
     def __init__(self, board, enemy):
         self.board = board
         self.enemy = enemy
+        self.go_until_miss = False  # ходить до промаха
 
     def ask(self):
         raise NotImplementedError()
@@ -169,10 +170,13 @@ class Player:
         while True:
             try:
                 target = self.ask()
-                repeat = self.enemy.shot(target)
+                repeat = self.enemy.shot(target, self.go_until_miss)
                 return repeat
             except BoardException as e:
                 print(e)
+
+    def go_until_miss_activate(self):
+        self.go_until_miss = True
 
 
 class AI(Player):
@@ -205,8 +209,9 @@ class Gamer(Player):
 class Game:
     def __init__(self, size=6):
         self.size = size
-        self.boards_horizont = True  # расположение досок на экране (True - горизонтальное, в строку)
-        self.with_pause = True  # делать паузу во время хода компьютера
+        self.boards_horizont = False  # расположение досок на экране (True - горизонтальное, в строку)
+        self.with_pause = False  # делать паузу во время хода компьютера
+        self.go_until_miss = False  # True - игрок ходит, пока не промажет
         pl = self.random_board()
         comp = self.random_board()
         comp.hid = True
@@ -304,10 +309,18 @@ class Game:
             num += 1
 
     def start(self):
+        if self.go_until_miss:
+            self.ai.go_until_miss_activate()
+            self.us.go_until_miss_activate()
         self.greet()
         self.loop()
 
 
-
+# Создаем экземпляр класса Game
 g = Game()
+# можно дополнительно поменять некоторые настройки игры:
+g.boards_horizont = True  # расположение досок на экране (True - горизонтальное, False - вертикальное)
+g.with_pause = True  # делать паузу во время хода компьютера 3 сек
+g.go_until_miss = True  # игрок ходит, пока не промажет (False - после потопления корабля противника - переход хода)
+# Запускаем игру
 g.start()
